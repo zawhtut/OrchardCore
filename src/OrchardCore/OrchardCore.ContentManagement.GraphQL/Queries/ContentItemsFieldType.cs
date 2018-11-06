@@ -6,7 +6,6 @@ using System.Threading.Tasks;
 using GraphQL.Resolvers;
 using GraphQL.Types;
 using Microsoft.Extensions.DependencyInjection;
-using Newtonsoft.Json.Linq;
 using OrchardCore.Apis.GraphQL;
 using OrchardCore.Apis.GraphQL.Queries;
 using OrchardCore.ContentManagement.GraphQL.Queries.Predicates;
@@ -70,10 +69,10 @@ namespace OrchardCore.ContentManagement.GraphQL.Queries
                 versionOption = GetVersionOption(context.GetArgument<PublicationStatusEnum>("status"));
             }
 
-            JObject where = null;
+            Dictionary<string, object> where = null;
             if (context.HasArgument("where"))
             {
-                where = JObject.FromObject(context.Arguments["where"]);
+                where = (Dictionary<string, object>)context.Arguments["where"];
             }
 
             var session = graphContext.ServiceProvider.GetService<ISession>();
@@ -93,8 +92,8 @@ namespace OrchardCore.ContentManagement.GraphQL.Queries
         }
 
         private async Task<IQuery<ContentItem>> FilterWhereArguments(
-            IQuery<ContentItem, ContentItemIndex> query, 
-            JObject where, 
+            IQuery<ContentItem, ContentItemIndex> query,
+            Dictionary<string, object> where, 
             ISession session, 
             GraphQLContext context)
         {
@@ -202,31 +201,31 @@ namespace OrchardCore.ContentManagement.GraphQL.Queries
             return query;
         }
 
-        private void BuildWhereExpressions(JToken where, Junction expressions, string tableAlias)
+        private void BuildWhereExpressions(object where, Junction expressions, string tableAlias)
         {
-            if (where is JArray array)
+            if (where is IEnumerable<object> array)
             {
-                foreach (var child in array.Children())
+                foreach (var child in array)
                 {
-                    if (child is JObject whereObject)
+                    if (child is Dictionary<string, object> whereObject)
                     {
                         BuildExpressionsInternal(whereObject, expressions, tableAlias);
                     }
                 }
             }
-            else if (where is JObject whereObject)
+            else if (where is Dictionary<string, object> whereObject)
             {
                 BuildExpressionsInternal(whereObject, expressions, tableAlias);
             }
         }
 
-        private void BuildExpressionsInternal(JObject where, Junction expressions, string tableAlias)
+        private void BuildExpressionsInternal(Dictionary<string, object> where, Junction expressions, string tableAlias)
         {
-            foreach (var entry in where.Properties())
+            foreach (var entry in where)
             {
                 IPredicate expression = null;
 
-                var values = entry.Name.Split(new[] { '_' }, 2);
+                var values = entry.Key.Split(new[] { '_' }, 2);
 
                 // Gets the full path name without the comparison e.g. aliasPart.alias, not aliasPart.alias_contains.
                 var property = values[0];
@@ -253,7 +252,7 @@ namespace OrchardCore.ContentManagement.GraphQL.Queries
                         BuildWhereExpressions(entry.Value, (Junction)expression, tableAlias);
                         expression = Expression.Not(expression);
                     }
-                    else if (entry.HasValues && entry.Value.Type == JTokenType.Object)
+                    else if (entry.Value is Dictionary<string, object>)
                     {
                         // Loop through the part's properties, passing the name of the part as the table tableAlias.
                         // This tableAlias can then be used with the table alias to index mappings to join with the correct table.
@@ -261,13 +260,13 @@ namespace OrchardCore.ContentManagement.GraphQL.Queries
                     }
                     else
                     {
-                        var propertyValue = entry.Value.ToObject<object>();
+                        var propertyValue = entry.Value;
                         expression = Expression.Equal(property, propertyValue);
                     }
                 }
                 else
                 {
-                    var value = entry.Value.ToObject<object>();
+                    var value = entry.Value;
 
                     switch (values[1])
                     {
@@ -282,8 +281,8 @@ namespace OrchardCore.ContentManagement.GraphQL.Queries
                         case "not_starts_with": expression = Expression.Not(Expression.Like(property, (string)value, MatchOptions.StartsWith)); break;
                         case "ends_with": expression = Expression.Like(property, (string)value, MatchOptions.EndsWith); break;
                         case "not_ends_with": expression = Expression.Not(Expression.Like(property, (string)value, MatchOptions.EndsWith)); break;
-                        case "in": expression = Expression.In(property, entry.Value.ToObject<object[]>()); break;
-                        case "not_in": expression = Expression.Not(Expression.In(property, entry.Value.ToObject<object[]>())); break;
+                        case "in": expression = Expression.In(property, (IEnumerable<object>)entry.Value); break;
+                        case "not_in": expression = Expression.Not(Expression.In(property, (IEnumerable<object>)entry.Value)); break;
 
                         default: expression = Expression.Equal(property, value); break;
                     }
@@ -301,19 +300,19 @@ namespace OrchardCore.ContentManagement.GraphQL.Queries
         {
             if (context.HasPopulatedArgument("orderBy"))
             {
-                var orderByArguments = JObject.FromObject(context.Arguments["orderBy"]);
+                var orderByArguments = (Dictionary<string, object>)context.Arguments["orderBy"];
 
                 if (orderByArguments != null)
                 {
                     var thenBy = false;
 
-                    foreach (var property in orderByArguments.Properties())
+                    foreach (var property in orderByArguments)
                     {
-                        var direction = (OrderByDirection)property.Value.Value<int>();
+                        var direction = (OrderByDirection)property.Value;
 
                         Expression<Func<ContentItemIndex, object>> selector = null;
 
-                        switch (property.Name)
+                        switch (property.Key)
                         {
                             case "contentItemId": selector = x => x.ContentItemId; break;
                             case "contentItemVersionId": selector = x => x.ContentItemVersionId; break;

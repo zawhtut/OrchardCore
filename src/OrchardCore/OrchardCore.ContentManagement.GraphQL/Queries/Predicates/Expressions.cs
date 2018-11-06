@@ -1,3 +1,5 @@
+using System.Collections.Generic;
+
 namespace OrchardCore.ContentManagement.GraphQL.Queries.Predicates
 {
     /// <summary>
@@ -79,7 +81,7 @@ namespace OrchardCore.ContentManagement.GraphQL.Queries.Predicates
         /// <param name="propertyName">The name of the property.</param>
         /// <param name="values">An array of values.</param>
         /// <returns>An <see cref="InExpression" />.</returns>
-        public static IPredicate In(string propertyName, object[] values)
+        public static IPredicate In(string propertyName, IEnumerable<object> values)
         {
             return new InExpression(propertyName, values);
         }

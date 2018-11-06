@@ -1,3 +1,5 @@
+using System.Collections.Generic;
+using System.Linq;
 using System.Text;
 
 namespace OrchardCore.ContentManagement.GraphQL.Queries.Predicates
@@ -9,26 +11,26 @@ namespace OrchardCore.ContentManagement.GraphQL.Queries.Predicates
     {
         private readonly string _propertyName;
 
-        public InExpression(string propertyName, object[] values)
+        public InExpression(string propertyName, IEnumerable<object> values)
         {
             _propertyName = propertyName;
             Values = values;
         }
 
-        public object[] Values { get; protected set; }
+        public IEnumerable<object> Values { get; protected set; }
 
         public string ToSqlString(IPredicateQuery predicateQuery)
         {
             // 'columnName in ()' is always false
-            if (Values.Length == 0) return "1=0";
+            if (Values.Count() == 0) return "1=0";
 
             // Generates:
             //  columnName in (@p1, @p2, @p3)
 
             var array = new StringBuilder();
-            for (var i = 0; i < Values.Length; i++)
+            for (var i = 0; i < Values.Count(); i++)
             {
-                var parameter = predicateQuery.NewQueryParameter(Values[i]);
+                var parameter = predicateQuery.NewQueryParameter(Values.ElementAt(i));
 
                 if (i > 0) array.Append(", ");
                 array.Append(parameter);
