@@ -66,7 +66,7 @@ namespace Microsoft.Extensions.DependencyInjection
                             var shellOptions = sp.GetService<IOptions<ShellOptions>>();
                             var option = shellOptions.Value;
                             var databaseFolder = Path.Combine(option.ShellsApplicationDataPath, option.ShellsContainerName, shellSettings.Name);
-                            var databaseFile = Path.Combine(databaseFolder, "yessql.db");
+                            var databaseFile = Path.Combine(databaseFolder, "OrchardCore.db");
                             Directory.CreateDirectory(databaseFolder);
                             storeConfiguration
                                 .UseSqLite($"Data Source={databaseFile};Cache=Shared", IsolationLevel.ReadUncommitted)
