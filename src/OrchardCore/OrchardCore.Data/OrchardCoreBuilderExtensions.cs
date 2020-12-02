@@ -70,7 +70,7 @@ namespace Microsoft.Extensions.DependencyInjection
                             Directory.CreateDirectory(databaseFolder);
 
                             var connectionString = shellSettings["ConnectionString"];
-                            if (connectionString.StartsWith("Data Source="))
+                            if (connectionString != null && connectionString.StartsWith("Data Source="))
                             {
                                 var connectionStringBuilder = new SqliteConnectionStringBuilder(connectionString);
                                 connectionStringBuilder.DataSource = Path.Combine(databaseFolder, connectionStringBuilder.DataSource);
