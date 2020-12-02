@@ -2,6 +2,7 @@ using System;
 using System.Data;
 using System.IO;
 using System.Linq;
+using Microsoft.Data.Sqlite;
 using Microsoft.Extensions.Options;
 using OrchardCore.Data;
 using OrchardCore.Data.Documents;
@@ -66,10 +67,23 @@ namespace Microsoft.Extensions.DependencyInjection
                             var shellOptions = sp.GetService<IOptions<ShellOptions>>();
                             var option = shellOptions.Value;
                             var databaseFolder = Path.Combine(option.ShellsApplicationDataPath, option.ShellsContainerName, shellSettings.Name);
-                            var databaseFile = Path.Combine(databaseFolder, "OrchardCore.db");
                             Directory.CreateDirectory(databaseFolder);
+
+                            var connectionString = shellSettings["ConnectionString"];
+                            if (connectionString.StartsWith("Data Source="))
+                            {
+                                var connectionStringBuilder = new SqliteConnectionStringBuilder(connectionString);
+                                connectionStringBuilder.DataSource = Path.Combine(databaseFolder, connectionStringBuilder.DataSource);
+                                connectionString = connectionStringBuilder.ConnectionString;
+                            }
+                            else
+                            {
+                                var databaseFile = Path.Combine(databaseFolder, "yessql.db");
+                                connectionString = $"Data Source={databaseFile};Cache=Shared";
+                            }
+
                             storeConfiguration
-                                .UseSqLite($"Data Source={databaseFile};Cache=Shared", IsolationLevel.ReadUncommitted)
+                                .UseSqLite(connectionString, IsolationLevel.ReadUncommitted)
                                 .UseDefaultIdGenerator();
                             break;
                         case "MySql":
