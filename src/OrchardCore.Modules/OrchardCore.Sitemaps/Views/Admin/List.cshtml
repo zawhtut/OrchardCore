@@ -33,7 +33,7 @@
                         <div class="related">
                             @if (entry.Enabled)
                             {
-                                <a asp-action="Index" asp-controller="Sitemap" asp-area="OrchardCore.Sitemaps" asp-route-sitemapId="@entry.SitemapId" class="btn btn-success btn-sm">@T["View"]</a>
+                                <a asp-action="Index" asp-controller="Sitemap" asp-area="OrchardCore.Sitemaps" asp-route-sitemapId="@entry.SitemapId" target="_blank" class="btn btn-success btn-sm">@T["View"]</a>
                             }
                             <a asp-action="Edit" asp-route-sitemapId="@entry.SitemapId" class="btn btn-primary btn-sm">@T["Edit"]</a>
                             <div class="btn-group btn-group-sm">
@@ -58,7 +58,7 @@
     }
     else
     {
-        <div class="alert alert-info" role="alert">
+        <div class="alert alert-info mb-1" role="alert">
             @T["<strong>Nothing here!</strong> There are no sitemaps for the moment."]
         </div>
     }
