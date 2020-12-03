@@ -2,7 +2,6 @@ using System;
 using System.Data;
 using System.IO;
 using System.Linq;
-using Microsoft.Data.Sqlite;
 using Microsoft.Extensions.Options;
 using OrchardCore.Data;
 using OrchardCore.Data.Documents;
@@ -70,13 +69,7 @@ namespace Microsoft.Extensions.DependencyInjection
                             Directory.CreateDirectory(databaseFolder);
 
                             var connectionString = shellSettings["ConnectionString"];
-                            if (connectionString != null && connectionString.StartsWith("Data Source="))
-                            {
-                                var connectionStringBuilder = new SqliteConnectionStringBuilder(connectionString);
-                                connectionStringBuilder.DataSource = Path.Combine(databaseFolder, connectionStringBuilder.DataSource);
-                                connectionString = connectionStringBuilder.ConnectionString;
-                            }
-                            else
+                            if (connectionString == null || !connectionString.StartsWith("Data Source="))
                             {
                                 var databaseFile = Path.Combine(databaseFolder, "yessql.db");
                                 connectionString = $"Data Source={databaseFile};Cache=Shared";
