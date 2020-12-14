@@ -166,7 +166,7 @@ namespace OrchardCore.Setup.Controllers
 
                 if (model.DatabaseProvider == "Sqlite")
                 {
-                    const string defaultDatabaseName = "OrchardCore.db";
+                    const string defaultDatabaseName = "orchardcore.db";
                     model.ConnectionString = $"Data Source={defaultDatabaseName};Cache=Shared";
                 }
 
